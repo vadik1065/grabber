@@ -1,0 +1,2 @@
+http://golang-book.ru/chapter-04-variables.html
+https://www.google.ru/
