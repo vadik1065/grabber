@@ -1,0 +1,1 @@
+go run .\main.go '.\sites.txt' '.\results\'
