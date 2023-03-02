@@ -17,15 +17,23 @@ func shownError(err error) {
 	}
 }
 
+// делает валидное имя
+func doValidName(nameString *string) {
+	delSymbols := [5]string{"/", "http", ".", "http", ":"}
+	for _, delStr := range delSymbols {
+		*nameString = strings.ReplaceAll(*nameString, delStr, "")
+	}
+}
+
 // скачиваем страницу
-func downHtm(puthPage string) {
-	http, err := http.Get(puthPage)
+func downHtm(namePage string) {
+	http, err := http.Get(namePage)
 	if err == nil {
-		namePage := strings.Split(puthPage, "/")
+		doValidName(&namePage)
 		body, err := ioutil.ReadAll(http.Body)
 		direct := flag.Arg(1)
 		formatF := "html"
-		err = ioutil.WriteFile(direct+namePage[2]+"."+formatF, body, 0644)
+		err = ioutil.WriteFile(direct+namePage+"."+formatF, body, 0644)
 
 		shownError(err)
 
