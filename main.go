@@ -25,36 +25,36 @@ func doValidName(nameString *string) {
 	}
 	*nameString = strings.ReplaceAll(*nameString, "/", "-")
 	*nameString = strings.TrimSuffix(*nameString, "-")
-
 }
 
 // скачиваем страницу
-func downHtm(namePage string, c chan string) {
-	// fmt.Println("start " + namePage)
+func downHtm(namePage string, direct string, c chan string) {
+	fmt.Println("start " + namePage)
 	http, err := http.Get(namePage)
 	if err == nil {
 		doValidName(&namePage)
 		body, err := ioutil.ReadAll(http.Body)
-		direct := flag.Arg(1)
 		formatF := "html"
 		err = ioutil.WriteFile(direct+namePage+"."+formatF, body, 0644)
 		shownError(err)
 	}
 	shownError(err)
-	// fmt.Println("end " + namePage)
+	fmt.Println("end " + namePage)
 	c <- "end"
 }
 
 // основная функция
 func main() {
 	//парсим флаги
+
+	var directOutput = flag.String("directOutput", "", "help message for flagname")
+	var fileInput = flag.String("fileInput", "sites.txt", "help message for flagname")
 	flag.Parse()
 
-	// fmt.Println(flag.Arg(0))
-	// fmt.Println(flag.Arg(1))
+	fmt.Println(*fileInput)
 
-	// чтение файла
-	file, err := os.Open(flag.Arg(0))
+	// // чтение файлa
+	file, err := os.Open(*fileInput)
 	shownError(err)
 
 	fileScaner := bufio.NewScanner(file)
@@ -65,7 +65,7 @@ func main() {
 	for fileScaner.Scan() {
 		c = make(chan string) // переприсваивание канала
 		puthPage := fileScaner.Text()
-		go downHtm(puthPage, c)
+		go downHtm(puthPage, *directOutput, c)
 	}
 	<-c // дожидаемся выполнение последнего, т.к он пересвоен
 

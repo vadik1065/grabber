@@ -1,1 +1,1 @@
-go run .\main.go '.\sites.txt' '.\results\'
+go run .\main.go --fileInput="sites.txt" --directOutput="results/"
