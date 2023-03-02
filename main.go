@@ -19,10 +19,13 @@ func shownError(err error) {
 
 // делает валидное имя
 func doValidName(nameString *string) {
-	delSymbols := [5]string{"/", "http", ".", "http", ":"}
+	delSymbols := [5]string{"www.", "https://", "http://", ".html", ".ru"}
 	for _, delStr := range delSymbols {
 		*nameString = strings.ReplaceAll(*nameString, delStr, "")
 	}
+	*nameString = strings.ReplaceAll(*nameString, "/", "-")
+	*nameString = strings.TrimSuffix(*nameString, "-")
+
 }
 
 // скачиваем страницу
