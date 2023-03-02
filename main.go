@@ -19,7 +19,7 @@ func shownError(err error) {
 
 // делает валидное имя
 func doValidName(nameString *string) {
-	delSymbols := [5]string{"www.", "https://", "http://", ".html", ".ru"}
+	delSymbols := [4]string{"www.", "https://", "http://", ".html"}
 	for _, delStr := range delSymbols {
 		*nameString = strings.ReplaceAll(*nameString, delStr, "")
 	}
@@ -29,7 +29,8 @@ func doValidName(nameString *string) {
 }
 
 // скачиваем страницу
-func downHtm(namePage string) {
+func downHtm(namePage string, c chan string) {
+	// fmt.Println("start " + namePage)
 	http, err := http.Get(namePage)
 	if err == nil {
 		doValidName(&namePage)
@@ -37,12 +38,11 @@ func downHtm(namePage string) {
 		direct := flag.Arg(1)
 		formatF := "html"
 		err = ioutil.WriteFile(direct+namePage+"."+formatF, body, 0644)
-
 		shownError(err)
-
 	}
 	shownError(err)
-
+	// fmt.Println("end " + namePage)
+	c <- "end"
 }
 
 // основная функция
@@ -61,10 +61,13 @@ func main() {
 	fileScaner.Split(bufio.ScanLines)
 
 	// пробегаем по всем строкам
+	var c chan string // объявляем канал
 	for fileScaner.Scan() {
+		c = make(chan string) // переприсваивание канала
 		puthPage := fileScaner.Text()
-		downHtm(puthPage)
+		go downHtm(puthPage, c)
 	}
+	<-c // дожидаемся выполнение последнего, т.к он пересвоен
 
 	defer file.Close()
 }
