@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 )
 
 // выводим ошибку
@@ -18,7 +19,7 @@ func shownError(err error) {
 }
 
 // делает валидное имя
-func doValidName(nameString *string) {
+func makeValidName(nameString *string) {
 	delSymbols := [4]string{"www.", "https://", "http://", ".html"}
 	for _, delStr := range delSymbols {
 		*nameString = strings.ReplaceAll(*nameString, delStr, "")
@@ -27,47 +28,55 @@ func doValidName(nameString *string) {
 	*nameString = strings.TrimSuffix(*nameString, "-")
 }
 
-// скачиваем страницу
-func downHtm(namePage string, direct string, c chan string) {
-	fmt.Println("start " + namePage)
-	http, err := http.Get(namePage)
-	if err == nil {
-		doValidName(&namePage)
-		body, err := ioutil.ReadAll(http.Body)
-		formatF := "html"
-		err = ioutil.WriteFile(direct+namePage+"."+formatF, body, 0644)
-		shownError(err)
+// делает валидную дикерторию
+func makeValidDir(directory *string) {
+	if len(*directory) != 0 {
+		*directory += "/"
 	}
-	shownError(err)
-	fmt.Println("end " + namePage)
-	c <- "end"
 }
 
 // основная функция
 func main() {
-	//парсим флаги
 
-	var directOutput = flag.String("directOutput", "", "help message for flagname")
-	var fileInput = flag.String("fileInput", "sites.txt", "help message for flagname")
+	var wg sync.WaitGroup
+
+	// скачиваем страницу
+	downHtm := func(namePage string, direct string) {
+		fmt.Println("start " + namePage)
+		http, err := http.Get(namePage)
+		if err == nil {
+			makeValidName(&namePage)
+			body, err := ioutil.ReadAll(http.Body)
+			formatF := "html"
+			err = ioutil.WriteFile(direct+namePage+"."+formatF, body, 0644)
+			shownError(err)
+		}
+		shownError(err)
+		fmt.Println("end " + namePage)
+		defer wg.Done()
+	}
+
+	//парсим флаги
+	var directOutput = flag.String("directOutput", "", "sets the directory where to save files")
+	var fileInput = flag.String("fileInput", "sites.txt", "path to the file from where to get html page")
 	flag.Parse()
 
-	fmt.Println(*fileInput)
+	makeValidDir(directOutput)
 
-	// // чтение файлa
+	// чтение файлa
 	file, err := os.Open(*fileInput)
-	shownError(err)
-
 	fileScaner := bufio.NewScanner(file)
 	fileScaner.Split(bufio.ScanLines)
+	shownError(err)
 
 	// пробегаем по всем строкам
-	var c chan string // объявляем канал
-	for fileScaner.Scan() {
-		c = make(chan string) // переприсваивание канала
+	for fileScaner.Scan() && err == nil {
+		wg.Add(1)
 		puthPage := fileScaner.Text()
-		go downHtm(puthPage, *directOutput, c)
+		go downHtm(puthPage, *directOutput)
 	}
-	<-c // дожидаемся выполнение последнего, т.к он пересвоен
+
+	wg.Wait()
 
 	defer file.Close()
 }
