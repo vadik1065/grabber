@@ -34,6 +34,7 @@ func downloadHtml(namePage string, directory string) {
 	fmt.Printf("start %s \n", namePage)
 	http, err := http.Get(namePage)
 	defer wg.Done()
+	defer http.Body.Close()
 
 	if err != nil {
 		fmt.Println(err)
@@ -49,7 +50,11 @@ func downloadHtml(namePage string, directory string) {
 	}
 
 	fileFormat := "html"
-	err = ioutil.WriteFile(directory+namePage+"."+fileFormat, body, 0644)
+	// fullNameFile := strings.Join(directory,namePage,".",fileFormat)
+	nameComponents := []string{directory, namePage, ".", fileFormat}
+	fullNameFile := strings.Join(nameComponents, "")
+
+	err = ioutil.WriteFile(fullNameFile, body, 0644)
 
 	if err != nil {
 		fmt.Println(err)
