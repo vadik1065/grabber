@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"sync"
 )
@@ -20,13 +21,6 @@ func makeValidName(nameString string) string {
 	nameString = strings.ReplaceAll(nameString, "/", "-")
 	nameString = strings.TrimSuffix(nameString, "-")
 	return nameString
-}
-
-// makeValidDirectory - делает валидную дикерторию
-func makeValidDirectory(directory *string) {
-	if len(*directory) != 0 {
-		*directory += "/"
-	}
 }
 
 //  downloadHtml - скачиваем страницу
@@ -50,9 +44,9 @@ func downloadHtml(namePage string, directory string) {
 	}
 
 	fileFormat := "html"
-	// fullNameFile := strings.Join(directory,namePage,".",fileFormat)
-	nameComponents := []string{directory, namePage, ".", fileFormat}
-	fullNameFile := strings.Join(nameComponents, "")
+	nameComponents := []string{namePage, ".", fileFormat}
+	nameFile := strings.Join(nameComponents, "")
+	fullNameFile := path.Join(directory, nameFile)
 
 	err = ioutil.WriteFile(fullNameFile, body, 0644)
 
@@ -73,8 +67,6 @@ func main() {
 	var directOutput = flag.String("directOutput", "", "sets the directory where to save files")
 	var fileInput = flag.String("fileInput", "sites.txt", "path to the file from where to get html page")
 	flag.Parse()
-
-	makeValidDirectory(directOutput)
 
 	// чтение файлa
 	file, err := os.Open(*fileInput)
