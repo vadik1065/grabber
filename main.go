@@ -28,12 +28,12 @@ func downloadHtml(namePage string, directory string) {
 	fmt.Printf("start %s \n", namePage)
 	http, err := http.Get(namePage)
 	defer wg.Done()
-	defer http.Body.Close()
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	defer http.Body.Close()
 
 	namePage = makeValidName(namePage)
 	body, err := ioutil.ReadAll(http.Body)
@@ -70,20 +70,15 @@ func main() {
 
 	// чтение файлa
 	file, err := os.Open(*fileInput)
-	defer file.Close()
 
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	defer file.Close()
 
 	fileScaner := bufio.NewScanner(file)
 	fileScaner.Split(bufio.ScanLines)
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
 
 	// пробегаем по всем строкам файлы и скачиваем
 	for fileScaner.Scan() && err == nil {
